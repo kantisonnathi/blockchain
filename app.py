@@ -35,5 +35,15 @@ def mine_block():
     return 'not mined yet. hang tight :)'
 
 
+@app.route('/node/register', methods=['POST'])
+def register_new_node():
+    return 'registered new node'
+
+
+@app.route('/node/resolve')
+def resolve_conflict():
+    return 'this is the consensus protocol'
+
+
 if __name__ == '__main__':
     app.run()
