@@ -4,6 +4,8 @@ from hashlib import sha256
 from urllib.parse import urlparse
 import time
 
+from flask.json import JSONEncoder
+
 
 class Blockchain:
     def __init__(self):
@@ -32,7 +34,10 @@ class Blockchain:
         else:
             raise ValueError('Invalid URL')
         """
+        if address in self.registered_nodes:
+            return 'Already registered'
         self.registered_nodes.append(address)
+        return 'Registered new Node'
 
     def valid_chain(self, chain):
         # determines if a given blockchain is valid
@@ -123,3 +128,8 @@ class Block:
     def compute_hash(self):
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return sha256(block_string.encode()).hexdigest()
+
+
+class BlockchainEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__

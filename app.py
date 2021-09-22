@@ -2,7 +2,7 @@ from flask import request
 from flask import Flask, jsonify
 
 from mining import SHA256, hash_calc, hash_calc_block
-from models import Blockchain, Block, Transaction
+from models import Blockchain, Block, Transaction, BlockchainEncoder
 
 app = Flask(__name__)
 blockchain = Blockchain()
@@ -29,7 +29,7 @@ def view_all_transactions():
         ret += str(current.index) + ' '
     print('current unverified transactions are: ')
     print(blockchain.unconfirmed_transactions)
-    return ret
+    return jsonify(ret)
 
 
 @app.route('/transactions/unverified', methods=['GET'])
@@ -64,15 +64,14 @@ def mine_block():
 def register_new_node():
     values = request.get_json()
     if values['passcode'] != passcode:
-        return jsonify('you have not been authorized'), 200
-    blockchain.register_node(values['address'])
-    return jsonify('registered new node'), 200
+        return jsonify('you are not authorized'), 200
+    resp = blockchain.register_node(values['address'])
+    return jsonify(resp), 200
 
 
 @app.route('/chain', methods=['GET'])
 def chain():
-    return jsonify(blockchain), 200
-
+    return BlockchainEncoder().encode(blockchain), 200
 
 
 if __name__ == '__main__':
