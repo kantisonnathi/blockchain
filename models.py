@@ -3,6 +3,7 @@ import json
 from hashlib import sha256
 from urllib.parse import urlparse
 import time
+from mining import hash_calc_block
 
 from flask.json import JSONEncoder
 
@@ -39,7 +40,7 @@ class Blockchain:
         self.registered_nodes.append(address)
         return 'Registered new Node'
 
-    def valid_chain(self, chain):
+    """def valid_chain(self, chain):
         # determines if a given blockchain is valid
         # here the parameter chain is the blockchain
         # returns true if valid and false if not
@@ -63,21 +64,13 @@ class Blockchain:
             last_block = block
             current_index += 1
 
-        return True
+        return True"""
 
     def new_block(self, previous_hash, nonce):
         # creating new block in the blockchain
         transaction = self.unconfirmed_transactions[0]
         block = Block(index=len(self.chain) + 1, timestamp=time, transaction=transaction, previous_hash=previous_hash,
                       nonce=nonce)
-        """
-        block = {
-            'index': len(self.chain) + 1,
-            'timestamp': time(),
-            'proof': proof,
-            'previous_hash': previous_hash or self.hash(self.chain[-1]),
-        }
-        """
 
         self.unconfirmed_transactions.remove(transaction)
 
@@ -91,6 +84,20 @@ class Blockchain:
         self.unconfirmed_transactions.append(transaction)
 
         return self.last_block['index'] + 1
+
+    def valid_chain(self):
+        idx = len(self.chain)
+        for i in range(0, len(self.chain) - 1):
+            fblock = self.chain[i]
+            sblock = self.chain[i + 1]
+            if hash_calc_block(fblock) != sblock.previous_hash:
+                idx = i + 1  # i is the bad block
+                break
+
+        for i in range(0, len(self.chain)):
+            if i >= idx:
+                self.chain.remove(self.chain[i])
+                i -= 1
 
     @property
     def last_block(self):
@@ -111,7 +118,7 @@ class Transaction:
         self.amount = amount
 
     def __repr__(self):
-        return self.sender + ' ' + self.recipient + ' ' + str(self.amount)
+        return 'sender: ' + self.sender + ', recipient: ' + self.recipient + ', amount: ' + str(self.amount)
 
 
 class Block:
