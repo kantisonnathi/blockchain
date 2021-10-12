@@ -1,6 +1,7 @@
 from flask import request
 from flask import Flask, jsonify
-
+import random
+import time
 from mining import SHA256, hash_calc, hash_calc_block
 from models import Blockchain, Block, Transaction, BlockchainEncoder
 
@@ -58,7 +59,8 @@ def mine_block():
 
     previous_hash = hash_calc_block(blockchain.last_block)
     new_hash_mined = hash_calc(len(blockchain.chain), previous_hash, curr_transaction, proposed_nonce)
-
+    if values['address'] not in blockchain.eligible_nodes:
+        return jsonify('You are not eligible to mine yet'), 200
     str_check = '0' * difficulty
     if new_hash_mined.startswith(str_check):
         # creating a new block because the nonce is acceptable
@@ -85,7 +87,27 @@ def allot_random_time():
     address = values['address']
     if address in dictionary_poet:
         return jsonify('You have already been allotted a time'), 200
+    if address not in blockchain.registered_nodes:
+        return jsonify('You have not been registered'), 200
+    rand = random.randint(0, 10)
+    timestamp = time.time()
+    dictionary_poet[address] = (rand, timestamp)
+    resp = "Your time stamp is " + str(timestamp) + "Your alloted value is "+ str(rand)
+    return jsonify(resp), 200
 
+
+@app.route('/node/complete',methods=['POST'])
+def mark_complete():
+    values = request.get_json()
+    address = values['address']
+    if address not in dictionary_poet:
+        return jsonify('You have not been alloted a time'),200
+    curr = time.time()
+    rand, past = dictionary_poet[address]
+    if curr < rand+past:
+        return jsonify('You are not yet eligible to mine a block'),200
+    blockchain.eligible_nodes.append(address)
+    return jsonify('You are now eligible to mine'),200
 
 @app.route('/chain', methods=['GET'])
 def chain():  # returns a json object of the entire blockchain

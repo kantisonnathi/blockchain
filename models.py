@@ -13,6 +13,7 @@ class Blockchain:
         self.chain = []
         self.create_genesis_block()
         self.registered_nodes = ['127.0.0.1']  # the home address is registered by default
+        self.eligible_nodes = ['127.0.0.1']
 
     def create_genesis_block(self):
         dummy_transaction = Transaction('127.0.0.1', '127.0.0.1', 0)  # a dummy transaction of 0 is added in the genesis block
