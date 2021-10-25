@@ -44,7 +44,7 @@ def view_unverified_transactions():  # this method returns a list of all the unc
     return str(blockchain.unconfirmed_transactions)
 
 
-@app.route('/mine', methods=['POST'])
+"""@app.route('/mine', methods=['POST'])
 def mine_block():
     # dex needs to check if the given nonce works
     values = request.get_json()
@@ -61,7 +61,7 @@ def mine_block():
     new_hash_mined = hash_calc(len(blockchain.chain), previous_hash, curr_transaction, proposed_nonce)
     if values['address'] not in blockchain.eligible_nodes:
         return jsonify('You are not eligible to mine yet'), 200
-    str_check = '0' * difficulty
+  str_check = '0' * difficulty
     if new_hash_mined.startswith(str_check):
         # creating a new block because the nonce is acceptable
         new_block = blockchain.new_block(previous_hash=previous_hash, nonce=proposed_nonce)
@@ -69,7 +69,24 @@ def mine_block():
         blockchain.unconfirmed_transactions.append(reward_transaction)
         blockchain.chain.append(new_block)
         return jsonify(f'You have been rewarded with {reward}'), 200
-    return jsonify('sorry, your nonce did not work :('), 200
+    return jsonify('sorry, your nonce did not work :('), 200"""
+
+
+@app.route('/node/addBlock', methods=['POST'])
+def add_block():
+    values = request.get_json()
+    curr_transaction = blockchain.unconfirmed_transactions[0]
+    previous_hash = hash_calc_block(blockchain.last_block)
+
+    new_hash_mined = hash_calc(len(blockchain.chain), previous_hash, curr_transaction, 0)
+    if values['address'] in blockchain.leader_nodes:
+        new_block = blockchain.new_block(previous_hash=previous_hash, nonce=0)
+        blockchain.chain.append(new_block)
+        blockchain.leader_nodes = {}
+        dictionary_poet = {}
+        return jsonify(f'The block has been added'), 200
+    else:
+        return jsonify(f'Only leader can add the block'), 200
 
 
 @app.route('/node/register', methods=['POST'])
@@ -89,25 +106,36 @@ def allot_random_time():
         return jsonify('You have already been allotted a time'), 200
     if address not in blockchain.registered_nodes:
         return jsonify('You have not been registered'), 200
-    rand = random.randint(0, 10)
+    rand = random.randint(1, 10)
     timestamp = time.time()
     dictionary_poet[address] = (rand, timestamp)
-    resp = "Your time stamp is " + str(timestamp) + "Your alloted value is "+ str(rand)
+    resp = "Your time stamp is " + str(timestamp) + "Your alloted value is " + str(rand)
     return jsonify(resp), 200
 
 
-@app.route('/node/complete',methods=['POST'])
+@app.route('/node/complete', methods=['POST'])
 def mark_complete():
     values = request.get_json()
     address = values['address']
     if address not in dictionary_poet:
         return jsonify('You have not been alloted a time'),200
-    curr = time.time()
+
     rand, past = dictionary_poet[address]
-    if curr < rand+past:
-        return jsonify('You are not yet eligible to mine a block'),200
-    blockchain.eligible_nodes.append(address)
-    return jsonify('You are now eligible to mine'),200
+    if verify_time(rand, past):
+        blockchain.leader_nodes.append(address)
+        return jsonify('You are now eligible to verify a transaction'), 200
+    elif len(blockchain.leader_nodes) != 0:
+        return jsonify('A leader has already been picked'), 200
+    else:
+        return jsonify('Your time has not been reached'), 200
+
+
+def verify_time(rand, past):
+    curr = time.time()
+    if curr > rand + past:
+        return True
+    return False
+
 
 @app.route('/chain', methods=['GET'])
 def chain():  # returns a json object of the entire blockchain
