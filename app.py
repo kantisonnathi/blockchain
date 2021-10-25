@@ -76,13 +76,14 @@ def mine_block():
 
 @app.route('/node/addBlock', methods=['POST'])
 def add_block():
+    if len(blockchain.unconfirmed_transactions) == 0:
+        return jsonify('No transactions required to be confirmed'), 200
     values = request.get_json()
     curr_transaction = blockchain.unconfirmed_transactions[0]
     previous_hash = hash_calc_block(blockchain.last_block)
 
     new_hash_mined = hash_calc(len(blockchain.chain), previous_hash, curr_transaction, 0)
-    if len(blockchain.unconfirmed_transactions) == 0:
-        return jsonify('No transactions required to be confirmed'), 200
+
     if values['address'] in blockchain.leader_nodes:
         new_block = blockchain.new_block(previous_hash=previous_hash, nonce=0)
         blockchain.leader_nodes = []
@@ -151,7 +152,7 @@ def current_transaction():  # returns the transaction that needs to be mined
     if len(blockchain.unconfirmed_transactions) == 0:
         return 'There are no transactions to mine at the moment, please try again later'
     transaction = blockchain.unconfirmed_transactions[0]
-    return jsonify(transaction),200
+    return str(transaction)
 
 
 def verify_time(rand, past):
