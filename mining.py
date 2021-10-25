@@ -10,6 +10,9 @@ def SHA256(text):
 def hash_calc(block_number, previous_hash, transaction, nonce):
     text = str(block_number) + str(transaction) + previous_hash + str(nonce)
     return SHA256(text)
+def hash_calc_without_nonce(block_number,previous_hash,transaction):
+    text = str(block_number) + str(transaction) + previous_hash
+    return SHA256(text)
 
 
 def hash_calc_block(block):
