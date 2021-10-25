@@ -41,6 +41,8 @@ def view_all_transactions():  # this method returns a list of all the confirmed 
 
 @app.route('/transactions/unverified', methods=['GET'])
 def view_unverified_transactions():  # this method returns a list of all the unconfirmed transactions
+    if len(blockchain.unconfirmed_transactions) == 0:
+        return jsonify("There are no unconfirmed transactions"), 200
     return str(blockchain.unconfirmed_transactions)
 
 
@@ -83,7 +85,7 @@ def add_block():
         new_block = blockchain.new_block(previous_hash=previous_hash, nonce=0)
         blockchain.chain.append(new_block)
         blockchain.leader_nodes = {}
-        dictionary_poet = {}
+        dictionary_poet.clear()
         return jsonify(f'The block has been added'), 200
     else:
         return jsonify(f'Only leader can add the block'), 200
@@ -118,7 +120,7 @@ def mark_complete():
     values = request.get_json()
     address = values['address']
     if address not in dictionary_poet:
-        return jsonify('You have not been alloted a time'),200
+        return jsonify('You have not been allotted a time'), 200
 
     rand, past = dictionary_poet[address]
     if verify_time(rand, past):
@@ -130,16 +132,13 @@ def mark_complete():
         return jsonify('Your time has not been reached'), 200
 
 
-def verify_time(rand, past):
-    curr = time.time()
-    if curr > rand + past:
-        return True
-    return False
-
-
 @app.route('/chain', methods=['GET'])
 def chain():  # returns a json object of the entire blockchain
-    return BlockchainEncoder().encode(blockchain), 200
+    ret = ''
+    for block in blockchain.chain:
+        ret += str(block) + '\n'
+    return jsonify(ret)
+    # return BlockchainEncoder().encode(blockchain), 200
 
 
 @app.route('/transaction/current', methods=['GET'])
@@ -148,6 +147,13 @@ def current_transaction():  # returns the transaction that needs to be mined
         return 'There are no transactions to mine at the moment, please try again later'
     transaction = blockchain.unconfirmed_transactions[0]
     return transaction
+
+
+def verify_time(rand, past):
+    curr = time.time()
+    if curr > rand + past:
+        return True
+    return False
 
 
 if __name__ == '__main__':

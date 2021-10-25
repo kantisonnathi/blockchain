@@ -13,10 +13,11 @@ class Blockchain:
         self.chain = []
         self.create_genesis_block()
         self.registered_nodes = ['127.0.0.1']  # the home address is registered by default
-        self.leader_nodes=[]
+        self.leader_nodes = []
 
     def create_genesis_block(self):
-        dummy_transaction = Transaction('127.0.0.1', '127.0.0.1', 0)  # a dummy transaction of 0 is added in the genesis block
+        dummy_transaction = Transaction('127.0.0.1', '127.0.0.1', 0)
+        # a dummy transaction of 0 is added in the genesis block
         genesis_block = Block(0, dummy_transaction, time.time(), "0")
         genesis_block.hash = "genesis block."
         self.chain.append(genesis_block)
@@ -30,7 +31,7 @@ class Blockchain:
     def new_block(self, previous_hash, nonce):
         # creating new block in the blockchain
         transaction = self.unconfirmed_transactions[0]
-        block = Block(index=len(self.chain) + 1, timestamp=time, transaction=transaction, previous_hash=previous_hash,
+        block = Block(index=len(self.chain) + 1, timestamp=time.time(), transaction=transaction, previous_hash=previous_hash,
                       nonce=nonce)
 
         self.unconfirmed_transactions.remove(transaction)
@@ -74,7 +75,7 @@ class Transaction:
         self.amount = amount
 
     def __repr__(self):
-        return 'sender: ' + self.sender + ', recipient: ' + self.recipient + ', amount: ' + str(self.amount)
+        return 'sender: ' + str(self.sender) + ', recipient: ' + str(self.recipient) + ', amount: ' + str(self.amount)
 
 
 class Block:
@@ -86,7 +87,9 @@ class Block:
         self.nonce = nonce
 
     def __repr__(self):
-        return 'index: ' + self.index + ', transaction: ' + self.transaction + ', timestamp: ' + self.timestamp
+        print(self.timestamp)
+        return 'index: ' + str(self.index) + ', transaction: ' + str(self.transaction) + ', timestamp: ' \
+               + str(self.timestamp)
 
 
 class BlockchainEncoder(JSONEncoder):  # this block enables us to convert the blockchain to json format
