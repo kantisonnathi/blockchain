@@ -81,10 +81,11 @@ def add_block():
     previous_hash = hash_calc_block(blockchain.last_block)
 
     new_hash_mined = hash_calc(len(blockchain.chain), previous_hash, curr_transaction, 0)
+    if len(blockchain.unconfirmed_transactions) == 0:
+        return jsonify('No transactions required to be confirmed'), 200
     if values['address'] in blockchain.leader_nodes:
         new_block = blockchain.new_block(previous_hash=previous_hash, nonce=0)
-        blockchain.chain.append(new_block)
-        blockchain.leader_nodes = {}
+        blockchain.leader_nodes = []
         dictionary_poet.clear()
         return jsonify(f'The block has been added'), 200
     else:
@@ -104,6 +105,8 @@ def register_new_node():  # registering a new node in the network that is author
 def allot_random_time():
     values = request.get_json()
     address = values['address']
+    if len(blockchain.unconfirmed_transactions)== 0 :
+        return jsonify('No transactions required to be confirmed'),200
     if address in dictionary_poet:
         return jsonify('You have already been allotted a time'), 200
     if address not in blockchain.registered_nodes:
@@ -118,6 +121,8 @@ def allot_random_time():
 @app.route('/node/complete', methods=['POST'])
 def mark_complete():
     values = request.get_json()
+    if len(blockchain.unconfirmed_transactions) == 0:
+        return jsonify('No transactions required to be confirmed'), 200
     address = values['address']
     if address not in dictionary_poet:
         return jsonify('You have not been allotted a time'), 200
@@ -146,7 +151,7 @@ def current_transaction():  # returns the transaction that needs to be mined
     if len(blockchain.unconfirmed_transactions) == 0:
         return 'There are no transactions to mine at the moment, please try again later'
     transaction = blockchain.unconfirmed_transactions[0]
-    return transaction
+    return jsonify(transaction),200
 
 
 def verify_time(rand, past):
